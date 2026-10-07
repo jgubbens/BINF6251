@@ -1,4 +1,3 @@
-
 # Project Proposal: Using Spanning Trees to Sort Blood Cells by Maturity and Type
 
 ## Research Question
@@ -7,7 +6,7 @@
 Can Kruskal's algorithm be utilized with a minimum spanning tree to predict the order in which blood cells mature using only gene expression profiles?
 
 ### Background:
-The process of development for blood stem cells involves changes in gene activation. While this process cannot be tracked through a single cell, a large sample of cells from all different points of development can be gathered. In this project, gene expression data of large cell samples will be mapped on a minimum spanning tree using Kruskal's algorithm. This is an application of Kruskal's algorithm on real cell data with the goal of sorting cells by maturity and understanding where they split into white and red blood cells.
+The process of development for blood progenitor cells involves changes in gene activation. While this process cannot be tracked through a single cell, a large sample of cells from all different points of development can be gathered. In this project, gene expression data of large cell samples will be mapped on a minimum spanning tree using Kruskal's algorithm. This is an application of Kruskal's algorithm on real cell data with the goal of sorting cells by maturity and understanding where they split into white and red blood lineages.
 
 ## Algorithm and Algorithm Class
 
@@ -18,7 +17,7 @@ This is an example of a tree-building algorithm, explored in Module 7.
 Kruskal's algorithm will be used to build the minimum spanning tree. Kruskal's algorithm is a method for connecting a set of points using the least total weight/cost of edges. The algorithm starts by sorting all possible edges connecting all nodes from lowest to highest weights. It then iterates through the sorted list, starting with the lowest weight edges. If the two nodes that are connected by the edge at each iteration are not already connected within the graph, even indirectly, the edge is added. If they are already connected, the edge is skipped. The result is called a minimum spanning tree which reaches every node, contains no loops, and has the lowest total edge weight possible.
 
 ### Justification:
-Since blood cells develop over time and eventually branch into white and red blood cells, the development process resembles a tree, with nodes representing clusters of similar cells and edges representing difference in gene expression. Kruskal's algorithm is a suitable way for building a tree that represents this data using the least total change in gene expression. This is realistic, as it is likely for cells to change their gene expression gradually as they develop rather than jump significantly and quickly.
+Since blood cells develop over time and eventually branch into white and red blood lineages, the development process resembles a tree, with nodes representing clusters of similar cells and edges representing difference in gene expression. Kruskal's algorithm is a suitable way for building a tree that represents this data using the least total change in gene expression. This is realistic, as it is likely for cells to change their gene expression gradually as they develop rather than jump significantly and quickly.
 
 ## Data Plan
 
@@ -33,19 +32,43 @@ The prototype dataset is a small set of simulated cells that will be generated t
 ## Success Criteria
 
 ### What Success Looks Like
+Success of this project would be indicated by a working tool that can intake a large batch of single-cell gene expression data and map them by maturity and developmental branch, with evidence that the sorting is founded and reasonable. Specifically, my project will be successful if the following criteria are met:
+1. On the simulated data, my method creates a predicted maturity order that is at least 90% similar to the true labels and correctly classifies at least 90% of cell clusters to their branches.
+2. On the real data, at least 80% of clusters labeled as red-cell and white-cell types by the authors fall on different branches of the generated tree.
 
 ### Expected Outputs
+1. A minimum spanning tree showing which clusters of cells are connected and the difference in gene expression between connected pairs.
+2. A list of paths through the tree, each running from the root cluster to one end point. Each path would represent one branch of development.
+3. A table showing for each cell the relative maturity position compared to other cells, represented as a distribution between 0 and 1, and which branch the cell is on.
+4. A figure showing a map of the cells, with branches labeled in different colors and relative maturity position labeled within each node.
 
 ### Result Validation
-how to check if result is reasonable
+The methodology and implementation of Kruskal's algorithm and the minimum spanning tree will be tested using the synthetic prototype data. Since this cell data will be generated with ground truth maturity and branch values, it can be used to test the code with an accuracy score. When working with real data, results will be validated using red and white blood cell labels published by the authors, as well as searches for common marker genes along each predicted branch.
 
 ## Pitfall Scan
-3 of each. explain 1. why it's a realistic concern adn 2. strategy for detecting and mitigating it
+
 ### Data-related issues
+1. In single-cell data, there can be zeroes listed in the data due to imperfect detection of molecules. This could affect distances between cells. To detect and mitigate this, I will check whether the main patterns in the data follow each cell's total count. If they do, I will normalize each cell by its total count.
+
+2. The full dataset was sorted and selected to contain progenitors and not stem cells, with few undecided cells. As a result, the tree may need to connect the red and white cell branches with a long edge. To detect and mitigate this, I will search for edges that are outliers in length and label them as low confidence connections in output figures.
+
+3. The full cell dataset has more than two branches, including some cells that are contamination of the sample. I will detect and mitigate this by comparing the tree against given cluster labels to see if detected branches are real. Contaminated cells will be detected and removed during the preprocessing stage.
 
 ### Algorithmic issues
 
+1. Kruskal's algorithm always returns a spanning tree, even if the data isn't truly structured as one. As such, it will keep adding edges connecting all possible nodes, even if the data contains branches that should not be connected at all. To detect and mitigate this, I will detect and record the longest edges, labeling them as low confidence and noting in the output that they may signal complete separation in true development.
+
+2. Using Kruskal's algorithm on a full dataset with thousands of cells as individual nodes will result in millions of edges, complicating the output and not smoothing out individual cell-based noise caused by occasional inaccurate readings. To detect and mitigate this, cells will be grouped in clusters, with each cluster serving as a node in the final tree.
+
+3. Spanning trees built from Kruskal's algorithm have no labeled root or start. As a result, choosing an incorrect starting cluster could cause errors in predicted maturity order. To detect and mitigate this, I will choose the starting node using the documentation of the dataset rather than having the algorithm choose through implemented logic.
+
 ### Evaluation issues
+
+1. The full dataset does not contain a label for true maturity order. Since all cells were collected at the same time, no cell has a known age. To mitigate this, claims of correctness of cell maturity detection will only come from the simulated data, which will have ground truth labels. On the real data, I will only check the validity of branch placement of each cluster from known marker genes and author labels.
+
+2. The simulated data may be cleaner than real data, resulting in a higher evaluated accuracy score than the method would obtain on real data. To detect and mitigate this, I will generate the prototype data with randomly generated noise and missing values to simulate the imperfection of the true dataset.
+
+3. With one dataset with an expected answer that is verifiable, it may be possible for settings to simply be tuned to match the dataset rather than truly work. To detect and mitigate this, I will choose all settings using only the simulated data rather than using the real dataset's results. I will also report the results for every combination of settings that I try.
 
 ## Planned Repository Structure
 
@@ -86,5 +109,7 @@ I used Claude to assist me in creating this proposal. Specifically, I used it in
 1. I used Claude to find relevant datasets that are usable in my project goal. I prompted, "I want to apply minimum spanning trees and Kruskal's algorithm in a way that tracks development or state transitions in cells. I have no access to wet lab resources or way to generate my own dataset. Find publicly available datasets that contain sufficient per-cell information suitable for this project." From the list of datasets it outputted, I explored which ones would be most suitable for my project and interested me most, and I chose the blood cell gene expression dataset.
 
 2. I used Claude to generate the above Planned Repository Structure. I prompted, "Generate me a sketch of repository structure containing the following files," and I provided the planned file names and directories. I then added comments to its output, explaining what each file and directory is. This was done to display the planned repository structure in a way that is more clear to a reader.
+
+3. I used Claude to review the completed proposal in its entirety. I prompted, "Look through this project proposal and tell me about any incorrect statements." From this, I found that the Paul15 dataset used progenitor cells rather than stem cells. I also found that the dataset doesn't contain fully mature cells, rather splitting into early branch lineages for them. With these corrections, I updated the language used to match the true dataset.
 
 Any use of AI tools in later parts of the project will be disclosed at that time.
