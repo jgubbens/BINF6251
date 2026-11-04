@@ -36,11 +36,39 @@ For my main dataset, I will use mouse blood cell progenitors, loaded with ```sca
 
 ### Kruskal's Algorithm
 
-### Data Preprocessing
+```
+function build_edges(clusters):
+    edges = empty list
+    for each pair of clusters (u, v) with u < v:
+        w = distance between centers[u] and centers[v]
+        if w is finite:
+            append (w, u, v) to edges
+    return edges
 
-### Generating Prototype Dataset of Simulated Branching Cells
+function find(parent, x):
+    while parent[x] != x:
+        parent[x] = parent[parent[x]]
+        x = parent[x]
+    return x
 
-### Main Pipeline
+function kruskal(k, edges):
+    parent = list from 0 to k-1
+    size = array of k ones
+    mst_edges = empty list
+    n_components = k
+
+    for (w, u, v) in edges sorted ascending by (w, u, v):
+        a = find(parent, u)
+        b = find(parent, v)
+        if a != b: # skip the edge if it would form a loop
+            attach the smaller of a and b to the larger and update size
+            append (w, u, v) to mst_edges
+            n_components = n_components - 1
+            if n_components == 1:
+                break
+
+    return mst_edges, n_components
+```
 
 ## Complexity and Bottlenecks
 
